@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: advprog-db
+    ports:
+      - "5432:5432" # Port Host : Port Container
+    environment:
+      - POSTGRES_USER=adpro
+      - POSTGRES_PASSWORD=adpro
+      - POSTGRES_DB=bondup_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
