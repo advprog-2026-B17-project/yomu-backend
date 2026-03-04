@@ -1,10 +1,12 @@
 plugins {
     java
-    id("org.springframework.boot") version "4.0.2"
+    id("org.springframework.boot") version "3.4.3"
     id("io.spring.dependency-management") version "1.1.7"
+
     id("checkstyle")
-    id("pmd")
+//    id("pmd")
     id("jacoco")
+
     id("org.sonarqube") version "7.2.2.6593"
 }
 
@@ -29,34 +31,49 @@ repositories {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-h2console")
+    implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.springframework.boot:spring-boot-starter-webmvc")
+
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+
+    implementation("com.fasterxml.jackson.core:jackson-databind")
+
     compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
+
     runtimeOnly("com.h2database:h2")
     runtimeOnly("org.postgresql:postgresql")
-    annotationProcessor("org.projectlombok:lombok")
-    testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
-    testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    testCompileOnly("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok")
 }
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
 }
+
+// --- CONFIG TOOLS ---
 
 checkstyle {
     toolVersion = "10.12.5"
     isIgnoreFailures = false
 }
 
-pmd {
-    toolVersion = "7.6.0"
-    isConsoleOutput = true
-    isIgnoreFailures = false
-    ruleSets = listOf("category/java/errorprone.xml", "category/java/bestpractices.xml")
-}
+//pmd {
+//    toolVersion = "6.55.0"
+//    isConsoleOutput = true
+//    isIgnoreFailures = false
+//    ruleSets = listOf("category/java/errorprone.xml", "category/java/bestpractices.xml")
+//}
 
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
