@@ -7,7 +7,7 @@ import id.ac.ui.cs.advprog.yomubackend.auth.dto.LoginRequest;
 import id.ac.ui.cs.advprog.yomubackend.auth.dto.RegisterRequest;
 import id.ac.ui.cs.advprog.yomubackend.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.yomubackend.auth.utils.JwtUtils;
-import id.ac.ui.cs.advprog.yomubackend.entity1.User;
+import id.ac.ui.cs.advprog.yomubackend.auth.entity.User;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

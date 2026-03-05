@@ -3,7 +3,7 @@ package id.ac.ui.cs.advprog.yomubackend.auth.controller;
 import id.ac.ui.cs.advprog.yomubackend.auth.dto.*;
 import id.ac.ui.cs.advprog.yomubackend.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.yomubackend.auth.utils.JwtUtils;
-import id.ac.ui.cs.advprog.yomubackend.entity1.User;
+import id.ac.ui.cs.advprog.yomubackend.auth.entity.User;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

@@ -1,15 +1,13 @@
 package id.ac.ui.cs.advprog.yomubackend.auth.entity;
+import id.ac.ui.cs.advprog.yomubackend.read_quiz.model.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
-
-import id.ac.ui.cs.advprog.yomubackend.read_quiz.model.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
@@ -17,7 +15,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
 public class User {
 
     @Id
@@ -30,6 +27,9 @@ public class User {
 
     @Column(nullable = false, unique = true)
     private String email;
+
+    @Column(nullable = false)
+    private String password;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
