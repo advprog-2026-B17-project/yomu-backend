@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.yomubackend.model;
+package id.ac.ui.cs.advprog.yomubackend.auth.entity;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -9,6 +9,7 @@ import id.ac.ui.cs.advprog.yomubackend.read_quiz.model.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
@@ -16,6 +17,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
 public class User {
 
     @Id

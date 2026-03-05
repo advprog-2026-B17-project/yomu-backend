@@ -3,7 +3,7 @@ package id.ac.ui.cs.advprog.yomubackend.read_quiz.model;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
-import id.ac.ui.cs.advprog.yomubackend.model.User;
+import id.ac.ui.cs.advprog.yomubackend.auth.entity.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
