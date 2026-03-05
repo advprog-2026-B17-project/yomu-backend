@@ -9,6 +9,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "users")
@@ -49,6 +50,7 @@ public class User {
     */
 
     @OneToMany(mappedBy = "createdBy", fetch = FetchType.LAZY)
+    @ToString.Exclude
     private List<Text> texts;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)

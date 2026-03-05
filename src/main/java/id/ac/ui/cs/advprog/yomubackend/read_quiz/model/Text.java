@@ -34,7 +34,7 @@ public class Text {
     private String category;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @Column(name = "created_by", nullable = false)
+    @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
     @CreationTimestamp
