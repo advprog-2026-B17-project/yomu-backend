@@ -62,4 +62,10 @@ public class User {
 
     // @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     // private List<UserAchievement> userAchievements;
+
+    public User(String username, String email, String password) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+    }
 }
