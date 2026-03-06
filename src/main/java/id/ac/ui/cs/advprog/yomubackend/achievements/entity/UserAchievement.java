@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.yomubackend.achievements.entity;
 
+import id.ac.ui.cs.advprog.yomubackend.auth.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,4 +24,8 @@ public class UserAchievement {
 
     @Column(nullable = false)
     private String milestone;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 }
