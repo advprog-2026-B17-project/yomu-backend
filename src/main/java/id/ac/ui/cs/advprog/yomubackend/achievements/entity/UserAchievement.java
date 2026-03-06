@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Achievement {
+public class UserAchievement {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
