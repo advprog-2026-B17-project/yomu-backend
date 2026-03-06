@@ -1,7 +1,6 @@
 package id.ac.ui.cs.advprog.yomubackend.read_quiz.mappper;
 
 import id.ac.ui.cs.advprog.yomubackend.auth.entity.User;
-import id.ac.ui.cs.advprog.yomubackend.read_quiz.dto.QuizMetadataDto;
 import id.ac.ui.cs.advprog.yomubackend.read_quiz.dto.TextDto;
 import id.ac.ui.cs.advprog.yomubackend.read_quiz.dto.TextSummaryDto;
 import id.ac.ui.cs.advprog.yomubackend.read_quiz.mapper.QuestionMapper;
@@ -16,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 class TextMapperTest {

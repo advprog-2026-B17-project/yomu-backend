@@ -1,13 +1,10 @@
 package id.ac.ui.cs.advprog.yomubackend.read_quiz.model;
 
-import id.ac.ui.cs.advprog.yomubackend.auth.entity.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
 
 class QuestionTest {
 

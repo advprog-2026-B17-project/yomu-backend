@@ -1,6 +1,5 @@
 package id.ac.ui.cs.advprog.yomubackend.read_quiz.mappper;
 
-import id.ac.ui.cs.advprog.yomubackend.read_quiz.dto.QuestionDto;
 import id.ac.ui.cs.advprog.yomubackend.read_quiz.dto.QuizMetadataDto;
 import id.ac.ui.cs.advprog.yomubackend.read_quiz.mapper.QuestionMapper;
 import id.ac.ui.cs.advprog.yomubackend.read_quiz.mapper.QuizMapper;
