@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.yomubackend.dto;
+package id.ac.ui.cs.advprog.yomubackend.auth.dto;
 
 public class LoginRequest {
     private String username;

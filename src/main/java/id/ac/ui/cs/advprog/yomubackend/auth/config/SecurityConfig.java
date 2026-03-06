@@ -1,6 +1,5 @@
-package id.ac.ui.cs.advprog.yomubackend.config;
+package id.ac.ui.cs.advprog.yomubackend.auth.config;
 
-import id.ac.ui.cs.advprog.yomubackend.Security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,6 +10,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import id.ac.ui.cs.advprog.yomubackend.auth.security.JwtAuthFilter;
 
 @Configuration
 public class SecurityConfig {

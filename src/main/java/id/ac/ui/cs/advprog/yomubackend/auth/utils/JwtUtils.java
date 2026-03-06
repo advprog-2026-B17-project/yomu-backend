@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.yomubackend.utils;
+package id.ac.ui.cs.advprog.yomubackend.auth.utils;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;

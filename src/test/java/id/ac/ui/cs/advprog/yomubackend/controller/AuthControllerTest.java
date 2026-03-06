@@ -1,16 +1,19 @@
 package id.ac.ui.cs.advprog.yomubackend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import id.ac.ui.cs.advprog.yomubackend.dto.LoginRequest;
-import id.ac.ui.cs.advprog.yomubackend.dto.RegisterRequest;
-import id.ac.ui.cs.advprog.yomubackend.entity.User;
-import id.ac.ui.cs.advprog.yomubackend.repository.UserRepository;
-import id.ac.ui.cs.advprog.yomubackend.utils.JwtUtils;
+
+import id.ac.ui.cs.advprog.yomubackend.auth.controller.AuthController;
+import id.ac.ui.cs.advprog.yomubackend.auth.dto.LoginRequest;
+import id.ac.ui.cs.advprog.yomubackend.auth.dto.RegisterRequest;
+import id.ac.ui.cs.advprog.yomubackend.auth.repository.UserRepository;
+import id.ac.ui.cs.advprog.yomubackend.auth.utils.JwtUtils;
+import id.ac.ui.cs.advprog.yomubackend.auth.entity.User;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
@@ -31,13 +34,13 @@ public class AuthControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private UserRepository userRepository;
 
-    @MockBean
+    @MockitoBean
     private PasswordEncoder passwordEncoder;
 
-    @MockBean
+    @MockitoBean
     private JwtUtils jwtUtils;
 
     private ObjectMapper objectMapper = new ObjectMapper();
