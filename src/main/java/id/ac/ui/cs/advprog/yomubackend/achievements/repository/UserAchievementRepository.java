@@ -8,6 +8,5 @@ import java.util.List;
 
 @Repository
 public interface UserAchievementRepository extends JpaRepository<UserAchievement, Long> {
-
     List<UserAchievement> findByUserId(Long userId);
 }
