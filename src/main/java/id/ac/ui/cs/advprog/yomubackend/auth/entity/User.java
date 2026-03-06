@@ -1,4 +1,5 @@
 package id.ac.ui.cs.advprog.yomubackend.auth.entity;
+import id.ac.ui.cs.advprog.yomubackend.achievements.entity.UserAchievement;
 import id.ac.ui.cs.advprog.yomubackend.read_quiz.model.*;
 
 import java.time.LocalDateTime;
@@ -62,8 +63,8 @@ public class User {
     // @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     // private List<ClanMember> clanMemberships;
 
-    // @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    // private List<UserAchievement> userAchievements;
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<UserAchievement> userAchievements;
 
     public User(String username, String email, String password) {
         this.username = username;
