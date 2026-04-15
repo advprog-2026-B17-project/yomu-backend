@@ -32,10 +32,16 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Username already taken!");
         }
 
+        if (userRepository.findByPhoneNumber(req.getPhoneNumber()).isPresent()) {
+            return ResponseEntity.badRequest().body("Phone number already registered!");
+        }
+
         User user = new User();
         user.setUsername(req.getUsername());
-        user.setEmail(req.getEmail());
+        user.setDisplayName(req.getDisplayName());
+        user.setPhoneNumber(req.getPhoneNumber());
         user.setPassword(passwordEncoder.encode(req.getPassword()));
+        user.setRole("USER");
 
         userRepository.save(user);
         return ResponseEntity.ok("User registered successfully");
@@ -43,7 +49,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
-        User user = userRepository.findByUsername(req.getUsername())
+        User user = userRepository.findByPhoneNumber(req.getPhoneNumber())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
@@ -58,5 +64,25 @@ public class AuthController {
     public ResponseEntity<?> getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok("Hello, " + username + "! You are authenticated.");
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileRequest req) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (req.getDisplayName() != null && !req.getDisplayName().isBlank()) {
+            user.setDisplayName(req.getDisplayName());
+        }
+        if (req.getPhoneNumber() != null && !req.getPhoneNumber().isBlank()) {
+            user.setPhoneNumber(req.getPhoneNumber());
+        }
+        if (req.getPassword() != null && !req.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(req.getPassword()));
+        }
+
+        userRepository.save(user);
+        return ResponseEntity.ok("Profile updated successfully");
     }
 }

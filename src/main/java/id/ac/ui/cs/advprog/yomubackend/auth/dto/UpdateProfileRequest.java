@@ -1,14 +1,24 @@
 package id.ac.ui.cs.advprog.yomubackend.auth.dto;
 
-public class LoginRequest {
+public class UpdateProfileRequest {
+    private String displayName;
     private String phoneNumber;
     private String password;
 
-    public LoginRequest() {}
+    public UpdateProfileRequest() {}
 
-    public LoginRequest(String phoneNumber, String password) {
+    public UpdateProfileRequest(String displayName, String phoneNumber, String password) {
+        this.displayName = displayName;
         this.phoneNumber = phoneNumber;
         this.password = password;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     public String getPhoneNumber() {
