@@ -70,7 +70,18 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return ResponseEntity.ok("Hello, " + username + "! You are authenticated.");
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        UserResponse response = new UserResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getDisplayName(),
+                user.getEmail(),
+                user.getPhoneNumber(),
+                user.getRole()
+        );
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/me")
