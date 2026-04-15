@@ -77,4 +77,12 @@ public class User {
         this.phoneNumber = phoneNumber;
         this.password = password;
     }
+
+    public User(String username, String displayName, String email, String phoneNumber, String password) {
+        this.username = username;
+        this.displayName = displayName;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.password = password;
+    }
 }
