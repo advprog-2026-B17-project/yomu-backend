@@ -47,7 +47,7 @@ class TextServiceImplTest {
     @BeforeEach
     void setUp() {
         // Create a mock User
-        user = new User("testuser", "test@example.com", "password");
+        user = new User("testuser", "testuser", "test@example.com", "password");
         user.setId(1L);
 
         // Create a mock Text

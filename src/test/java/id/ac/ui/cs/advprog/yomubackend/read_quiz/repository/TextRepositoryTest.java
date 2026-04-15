@@ -29,7 +29,7 @@ class TextRepositoryTest {
     @BeforeEach
     void setUp() {
         // Create a User
-        user = new User("testuser", "test@example.com", "password");
+        user = new User("testuser", "testuser", "test@example.com", "password");
         entityManager.persist(user);
 
         // Create Texts

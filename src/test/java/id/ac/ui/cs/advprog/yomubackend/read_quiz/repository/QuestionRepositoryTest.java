@@ -30,7 +30,7 @@ class QuestionRepositoryTest {
     @BeforeEach
     void setUp() {
         // Create a User
-        User user = new User("testuser", "test@example.com", "password");
+        User user = new User("testuser", "testuser", "test@example.com", "password");
         entityManager.persist(user);
 
         // Create a Text

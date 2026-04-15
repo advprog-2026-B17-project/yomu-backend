@@ -47,7 +47,7 @@ public class AuthControllerTest {
 
     @Test
     public void testRegister_Success() throws Exception {
-        RegisterRequest request = new RegisterRequest("gerry_test", "gerry@test.com", "pass123");
+        RegisterRequest request = new RegisterRequest("gerry_test", "Gerry Test", "gerry@test.com", null, "pass123");
 
         when(userRepository.existsByUsername(request.getUsername())).thenReturn(false);
         when(userRepository.save(any(User.class))).thenReturn(new User());
@@ -55,29 +55,29 @@ public class AuthControllerTest {
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk()) // Harapannya 200 OK
+                .andExpect(status().isOk())
                 .andExpect(content().string("User registered successfully"));
     }
 
     @Test
     public void testRegister_Fail_UsernameTaken() throws Exception {
-        RegisterRequest request = new RegisterRequest("gerry_ada", "ada@test.com", "pass123");
+        RegisterRequest request = new RegisterRequest("gerry_ada", "Gerry Ada", "ada@test.com", null, "pass123");
 
         when(userRepository.existsByUsername(request.getUsername())).thenReturn(true);
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest()) // Harapannya 400 Bad Request
+                .andExpect(status().isBadRequest())
                 .andExpect(content().string("Username already taken!"));
     }
 
     @Test
     public void testLogin_Success() throws Exception {
-        LoginRequest loginReq = new LoginRequest("gerry_test", "pass123");
-        User mockUser = new User("gerry_test", "gerry@test.com", "encodedPassword");
+        LoginRequest loginReq = new LoginRequest("gerry@test.com", "pass123");
+        User mockUser = new User("gerry_test", "Gerry Test", "gerry@test.com", "encodedPassword");
 
-        when(userRepository.findByUsername(loginReq.getUsername())).thenReturn(Optional.of(mockUser));
+        when(userRepository.findByEmailOrPhoneNumber(loginReq.getIdentifier())).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.matches(loginReq.getPassword(), mockUser.getPassword())).thenReturn(true);
         when(jwtUtils.generateToken(mockUser.getUsername())).thenReturn("dummy-jwt-token");
 
@@ -90,9 +90,9 @@ public class AuthControllerTest {
 
     @Test
     public void testLogin_Fail_UserNotFound() throws Exception {
-        LoginRequest loginReq = new LoginRequest("hantu", "pass123");
+        LoginRequest loginReq = new LoginRequest("hantu@test.com", "pass123");
 
-        when(userRepository.findByUsername("hantu")).thenReturn(Optional.empty());
+        when(userRepository.findByEmailOrPhoneNumber("hantu@test.com")).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
