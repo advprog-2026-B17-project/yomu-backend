@@ -32,13 +32,20 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Username already taken!");
         }
 
-        if (userRepository.findByPhoneNumber(req.getPhoneNumber()).isPresent()) {
+        if (req.getEmail() != null && !req.getEmail().isBlank()
+                && userRepository.existsByEmail(req.getEmail())) {
+            return ResponseEntity.badRequest().body("Email already registered!");
+        }
+
+        if (req.getPhoneNumber() != null && !req.getPhoneNumber().isBlank()
+                && userRepository.existsByPhoneNumber(req.getPhoneNumber())) {
             return ResponseEntity.badRequest().body("Phone number already registered!");
         }
 
         User user = new User();
         user.setUsername(req.getUsername());
         user.setDisplayName(req.getDisplayName());
+        user.setEmail(req.getEmail());
         user.setPhoneNumber(req.getPhoneNumber());
         user.setPassword(passwordEncoder.encode(req.getPassword()));
         user.setRole("USER");
@@ -49,7 +56,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
-        User user = userRepository.findByPhoneNumber(req.getPhoneNumber())
+        User user = userRepository.findByEmailOrPhoneNumber(req.getIdentifier())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
@@ -74,6 +81,9 @@ public class AuthController {
 
         if (req.getDisplayName() != null && !req.getDisplayName().isBlank()) {
             user.setDisplayName(req.getDisplayName());
+        }
+        if (req.getEmail() != null && !req.getEmail().isBlank()) {
+            user.setEmail(req.getEmail());
         }
         if (req.getPhoneNumber() != null && !req.getPhoneNumber().isBlank()) {
             user.setPhoneNumber(req.getPhoneNumber());

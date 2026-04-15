@@ -29,6 +29,9 @@ public class User {
     @Column(name = "display_name")
     private String displayName;
 
+    @Column(unique = true)
+    private String email;
+
     @Column(name = "phone_number", unique = true)
     private String phoneNumber;
 

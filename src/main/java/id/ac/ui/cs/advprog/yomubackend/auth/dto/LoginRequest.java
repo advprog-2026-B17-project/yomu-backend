@@ -1,22 +1,22 @@
 package id.ac.ui.cs.advprog.yomubackend.auth.dto;
 
 public class LoginRequest {
-    private String phoneNumber;
+    private String identifier; // bisa email atau phoneNumber
     private String password;
 
     public LoginRequest() {}
 
-    public LoginRequest(String phoneNumber, String password) {
-        this.phoneNumber = phoneNumber;
+    public LoginRequest(String identifier, String password) {
+        this.identifier = identifier;
         this.password = password;
     }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
+    public String getIdentifier() {
+        return identifier;
     }
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
     }
 
     public String getPassword() {
