@@ -11,7 +11,7 @@ public class UserAchievementTest {
 
     @Test
     public void testUserAchievementCreation() {
-        User user = new User("testuser", "test@test.com", "password123");
+        User user = new User("testuser", "testuser", "test@test.com", null, "password123");
         user.setId(1L);
 
         UserAchievement achievement = UserAchievement.builder()
