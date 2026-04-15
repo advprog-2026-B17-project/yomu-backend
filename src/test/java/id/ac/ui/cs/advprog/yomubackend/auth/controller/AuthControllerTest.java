@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.yomubackend.controller;
+package id.ac.ui.cs.advprog.yomubackend.auth.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -75,7 +75,7 @@ public class AuthControllerTest {
     @Test
     public void testLogin_Success() throws Exception {
         LoginRequest loginReq = new LoginRequest("gerry@test.com", "pass123");
-        User mockUser = new User("gerry_test", "Gerry Test", "gerry@test.com", "encodedPassword");
+        User mockUser = new User("gerry_test", "Gerry Test", "gerry@test.com", null, "encodedPassword");
 
         when(userRepository.findByEmailOrPhoneNumber(loginReq.getIdentifier())).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.matches(loginReq.getPassword(), mockUser.getPassword())).thenReturn(true);
