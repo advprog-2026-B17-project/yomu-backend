@@ -29,7 +29,7 @@ class QuizRepositoryTest {
     @BeforeEach
     void setUp() {
         // Create a User
-        User user = new User("testuser", "testuser", "test@example.com", "password");
+        User user = new User("testuser", "testuser", "test@example.com", null, "password");
         entityManager.persist(user);
 
         // Create a Text (required for Quiz)

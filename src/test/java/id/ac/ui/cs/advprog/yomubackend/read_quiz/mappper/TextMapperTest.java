@@ -33,7 +33,7 @@ class TextMapperTest {
     @Test
     void testToSummaryWithValidText() {
         // Create a mock User
-        User user = new User("testuser", "testuser", "test@example.com", "password");
+        User user = new User("testuser", "testuser", "test@example.com", null, "password");
         user.setId(1L);
 
         // Create Text with content > 200 chars to test excerpt
@@ -75,7 +75,7 @@ class TextMapperTest {
 
     @Test
     void testToSummaryWithShortContent() {
-        User user = new User("testuser", "testuser", "test@example.com", "password");
+        User user = new User("testuser", "testuser", "test@example.com", null, "password");
         
         Text text = Text.builder()
                 .id(1L)
@@ -93,7 +93,7 @@ class TextMapperTest {
 
     @Test
     void testToSummaryWithNullContent() {
-        User user = new User("testuser", "testuser", "test@example.com", "password");
+        User user = new User("testuser", "testuser", "test@example.com", null, "password");
         
         Text text = Text.builder()
                 .id(1L)
@@ -127,7 +127,7 @@ class TextMapperTest {
 
     @Test
     void testToDtoWithQuizMetadata() {
-        User user = new User("testuser", "testuser", "test@example.com", "password");
+        User user = new User("testuser", "testuser", "test@example.com", null, "password");
         user.setId(1L);
 
         // Create quizzes
@@ -159,7 +159,7 @@ class TextMapperTest {
 
     @Test
     void testToDtoWithoutQuizMetadata() {
-        User user = new User("testuser", "testuser", "test@example.com", "password");
+        User user = new User("testuser", "testuser", "test@example.com", null, "password");
         
         Text text = Text.builder()
                 .id(1L)
@@ -185,7 +185,7 @@ class TextMapperTest {
 
     @Test
     void testToDtoWithNullQuizzes() {
-        User user = new User("testuser", "testuser", "test@example.com", "password");
+        User user = new User("testuser", "testuser", "test@example.com", null, "password");
         
         Text text = Text.builder()
                 .id(1L)
@@ -220,7 +220,7 @@ class TextMapperTest {
 
     @Test
     void testToDtoWithEmptyQuizzesList() {
-        User user = new User("testuser", "testuser", "test@example.com", "password");
+        User user = new User("testuser", "testuser", "test@example.com", null, "password");
         
         Text text = Text.builder()
                 .id(1L)
@@ -239,7 +239,7 @@ class TextMapperTest {
 
     @Test
     void testToDtoContentField() {
-        User user = new User("testuser", "testuser", "test@example.com", "password");
+        User user = new User("testuser", "testuser", "test@example.com", null, "password");
         
         String fullContent = "This is the full content of the text.";
         
