@@ -1,25 +1,22 @@
 package id.ac.ui.cs.advprog.yomubackend.auth.dto;
 
 public class LoginRequest {
-    private String username;
+    private String identifier; // bisa email atau phoneNumber
     private String password;
 
-    // Constructor Kosong
     public LoginRequest() {}
 
-    // Constructor Isi
-    public LoginRequest(String username, String password) {
-        this.username = username;
+    public LoginRequest(String identifier, String password) {
+        this.identifier = identifier;
         this.password = password;
     }
 
-    // Getter & Setter
-    public String getUsername() {
-        return username;
+    public String getIdentifier() {
+        return identifier;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
     }
 
     public String getPassword() {
