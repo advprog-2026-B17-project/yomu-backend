@@ -6,6 +6,7 @@ import lombok.*;
 import id.ac.ui.cs.advprog.yomubackend.auth.entity.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "quiz_attempts")
@@ -33,4 +34,7 @@ public class QuizAttempt {
 
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
+
+    @OneToMany(mappedBy = "quizAttempt", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Answer> answers;
 }

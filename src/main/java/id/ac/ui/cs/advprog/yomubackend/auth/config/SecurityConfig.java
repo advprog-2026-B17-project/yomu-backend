@@ -2,6 +2,7 @@ package id.ac.ui.cs.advprog.yomubackend.auth.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -29,6 +30,11 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, "/api/texts/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/quizzes/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/quizzes/*/start").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/quizzes/attempts/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/quizzes/attempts/**").authenticated()
                         .requestMatchers("/auth/**", "/error").permitAll()
                         .anyRequest().authenticated()
                 )
