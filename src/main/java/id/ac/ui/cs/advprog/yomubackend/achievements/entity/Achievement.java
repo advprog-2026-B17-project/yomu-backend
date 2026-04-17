@@ -1,6 +1,6 @@
 package id.ac.ui.cs.advprog.yomubackend.achievements.entity;
 
-import id.ac.ui.cs.advprog.yomubackend.auth.entity.User;
+import id.ac.ui.cs.advprog.yomubackend.achievements.entity.types.ConditionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,13 +8,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "achievements")
+@Table(name = "achievements_catalog")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserAchievement {
-
+public class Achievement {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,10 +21,16 @@ public class UserAchievement {
     @Column(nullable = false, length = 255)
     private String name;
 
-    @Column(nullable = false)
-    private String milestone;
+    @Column(nullable = false, length = 1000)
+    private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ConditionType conditionType;
+
+    @Column(nullable = false)
+    private Integer targetValue;
+
+    @Column(name = "icon_url")
+    private String iconUrl;
 }
