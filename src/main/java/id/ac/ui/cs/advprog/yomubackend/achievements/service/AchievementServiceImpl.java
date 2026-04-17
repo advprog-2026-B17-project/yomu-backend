@@ -3,7 +3,6 @@ package id.ac.ui.cs.advprog.yomubackend.achievements.service;
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementDto;
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.UserAchievementDto;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.Achievement;
-import id.ac.ui.cs.advprog.yomubackend.achievements.entity.types.ConditionType;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.UserAchievement;
 import id.ac.ui.cs.advprog.yomubackend.achievements.exception.AchievementNotFoundException;
 import id.ac.ui.cs.advprog.yomubackend.achievements.mapper.AchievementMapper;
