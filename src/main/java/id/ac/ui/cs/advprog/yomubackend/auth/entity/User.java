@@ -22,12 +22,17 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // username or displayname
     @Column(nullable = false)
     private String username;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "display_name")
+    private String displayName;
+
+    @Column(unique = true)
     private String email;
+
+    @Column(name = "phone_number", unique = true)
+    private String phoneNumber;
 
     @Column(name = "password_hash", nullable = false)
     private String password;
@@ -45,7 +50,7 @@ public class User {
        - clansLed: clan yang dipimpin user
        - clanMemberships: keanggotaan user di clans
        - userAchievements: achievements milik user
-       
+
        NOTE: mappedBy harus sesuai nama field ManyToOne di entity target.
     */
 
@@ -65,9 +70,18 @@ public class User {
     // @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     // private List<UserAchievement> userAchievements;
 
-    public User(String username, String email, String password) {
+    public User(String username, String displayName, String phoneNumber, String password) {
         this.username = username;
+        this.displayName = displayName;
+        this.phoneNumber = phoneNumber;
+        this.password = password;
+    }
+
+    public User(String username, String displayName, String email, String phoneNumber, String password) {
+        this.username = username;
+        this.displayName = displayName;
         this.email = email;
+        this.phoneNumber = phoneNumber;
         this.password = password;
     }
 }
