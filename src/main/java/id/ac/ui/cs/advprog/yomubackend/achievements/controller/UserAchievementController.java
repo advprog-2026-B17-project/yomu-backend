@@ -1,30 +1,41 @@
 package id.ac.ui.cs.advprog.yomubackend.achievements.controller;
 
-import id.ac.ui.cs.advprog.yomubackend.achievements.entity.UserAchievement;
-import id.ac.ui.cs.advprog.yomubackend.achievements.repository.UserAchievementRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementDto;
+import id.ac.ui.cs.advprog.yomubackend.achievements.dto.UserAchievementDto;
+import id.ac.ui.cs.advprog.yomubackend.achievements.service.AchievementService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/api")
 public class UserAchievementController {
 
+    private final AchievementService achievementService;
+
     @Autowired
-    private UserAchievementRepository userAchievementRepository;
+    public UserAchievementController(AchievementService achievementService) {
+        this.achievementService = achievementService;
+    }
 
     @GetMapping("/achievements")
-    public ResponseEntity<List<UserAchievement>> getAllAchievements() {
-        List<UserAchievement> achievements = userAchievementRepository.findAll();
-        return ResponseEntity.ok(achievements);
+    public ResponseEntity<Page<AchievementDto>> getAllAchievements(
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(achievementService.getAllAchievements(pageable));
+    }
+
+    @GetMapping("/achievements/{id}")
+    public ResponseEntity<AchievementDto> getAchievementById(@PathVariable Long id) {
+        return ResponseEntity.ok(achievementService.getAchievementById(id));
     }
 
     @GetMapping("/users/{id}/achievements")
-    public ResponseEntity<List<UserAchievement>> getUserAchievements(@PathVariable Long id) {
-        List<UserAchievement> userAchievements = userAchievementRepository.findByUserId(id);
-        return ResponseEntity.ok(userAchievements);
+    public ResponseEntity<Page<UserAchievementDto>> getUserAchievements(
+            @PathVariable Long id,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(achievementService.getUserAchievementProgress(id, pageable));
     }
 }
