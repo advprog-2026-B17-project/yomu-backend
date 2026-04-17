@@ -1,38 +1,18 @@
 package id.ac.ui.cs.advprog.yomubackend.auth.dto;
 
-public class RegisterRequest {
-    private String username;
+public class UpdateProfileRequest {
     private String displayName;
     private String email;
     private String phoneNumber;
     private String password;
 
-    public RegisterRequest() {}
+    public UpdateProfileRequest() {}
 
-    public RegisterRequest(String username, String displayName, String email, String phoneNumber, String password) {
-        this.username = username;
+    public UpdateProfileRequest(String displayName, String email, String phoneNumber, String password) {
         this.displayName = displayName;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.password = password;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    private String role;
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getDisplayName() {

@@ -1,31 +1,31 @@
 package id.ac.ui.cs.advprog.yomubackend.auth.dto;
 
-public class RegisterRequest {
+public class UserResponse {
+    private Long id;
     private String username;
     private String displayName;
     private String email;
     private String phoneNumber;
-    private String password;
+    private String role;
 
-    public RegisterRequest() {}
+    public UserResponse() {}
 
-    public RegisterRequest(String username, String displayName, String email, String phoneNumber, String password) {
+    public UserResponse(Long id, String username, String displayName, String email, String phoneNumber, String role) {
+        this.id = id;
         this.username = username;
         this.displayName = displayName;
         this.email = email;
         this.phoneNumber = phoneNumber;
-        this.password = password;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
         this.role = role;
     }
 
-    private String role;
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getUsername() {
         return username;
@@ -59,11 +59,11 @@ public class RegisterRequest {
         this.phoneNumber = phoneNumber;
     }
 
-    public String getPassword() {
-        return password;
+    public String getRole() {
+        return role;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setRole(String role) {
+        this.role = role;
     }
 }
