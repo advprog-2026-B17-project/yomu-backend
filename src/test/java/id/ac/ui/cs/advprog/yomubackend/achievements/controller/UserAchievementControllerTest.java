@@ -3,6 +3,7 @@ package id.ac.ui.cs.advprog.yomubackend.achievements.controller;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.UserAchievement;
 import id.ac.ui.cs.advprog.yomubackend.achievements.repository.UserAchievementRepository;
 import id.ac.ui.cs.advprog.yomubackend.auth.entity.User;
+import id.ac.ui.cs.advprog.yomubackend.auth.repository.UserRepository;
 import id.ac.ui.cs.advprog.yomubackend.auth.utils.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,9 @@ public class UserAchievementControllerTest {
 
     @MockitoBean
     private UserAchievementRepository userAchievementRepository;
+
+    @MockitoBean
+    private UserRepository userRepository;
 
     @MockitoBean
     private JwtUtils jwtUtils;

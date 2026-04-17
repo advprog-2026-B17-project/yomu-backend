@@ -18,7 +18,7 @@ class QuizTest {
     @BeforeEach
     void setUp() {
         // Create a mock User - using constructor since User doesn't have builder
-        user = new User("testuser", "test@example.com", "password");
+        user = new User("testuser", "testuser", "test@example.com", null, "password");
         user.setId(1L);
 
         // Create a mock Text
