@@ -11,12 +11,14 @@ import id.ac.ui.cs.advprog.yomubackend.achievements.repository.AchievementReposi
 import id.ac.ui.cs.advprog.yomubackend.achievements.repository.UserAchievementRepository;
 import id.ac.ui.cs.advprog.yomubackend.auth.entity.User;
 import id.ac.ui.cs.advprog.yomubackend.auth.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -27,6 +29,7 @@ public class AchievementServiceImpl implements AchievementService {
     private final UserRepository userRepository;
     private final AchievementMapper achievementMapper;
 
+    @Autowired
     public AchievementServiceImpl(
             AchievementRepository achievementRepository,
             UserAchievementRepository userAchievementRepository,
@@ -65,36 +68,32 @@ public class AchievementServiceImpl implements AchievementService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
-        evaluateFirstQuizAchievement(user, totalQuizzesCompleted);
-        evaluateScoreAchievement(user, score);
-        evaluateQuizCountAchievement(user, totalQuizzesCompleted);
-    }
+        List<Achievement> allAchievements = achievementRepository.findAll();
 
-    private void evaluateFirstQuizAchievement(User user, Integer totalQuizzesCompleted) {
-        if (totalQuizzesCompleted != null && totalQuizzesCompleted == 1) {
-            Optional<Achievement> achievement = achievementRepository
-                    .findByConditionTypeAndTargetValue(ConditionType.FIRST_QUIZ_COMPLETED, 1);
-
-            achievement.ifPresent(a -> unlockAchievementIfNew(user, a, 1));
+        for (Achievement achievement : allAchievements) {
+            if (evaluateCondition(achievement, score, totalQuizzesCompleted)) {
+                int progressValue = getProgressValue(achievement, score, totalQuizzesCompleted);
+                unlockAchievementIfNew(user, achievement, progressValue);
+            }
         }
     }
 
-    private void evaluateScoreAchievement(User user, Integer score) {
-        if (score != null && score >= 90) {
-            Optional<Achievement> achievement = achievementRepository
-                    .findByConditionTypeAndTargetValue(ConditionType.SCORE_ABOVE, 90);
-
-            achievement.ifPresent(a -> unlockAchievementIfNew(user, a, score));
-        }
+    private boolean evaluateCondition(Achievement achievement, Integer score, Integer totalQuizzesCompleted) {
+        return switch (achievement.getConditionType()) {
+            case FIRST_QUIZ_COMPLETED -> totalQuizzesCompleted != null
+                    && totalQuizzesCompleted >= achievement.getTargetValue();
+            case QUIZ_COUNT -> totalQuizzesCompleted != null
+                    && totalQuizzesCompleted >= achievement.getTargetValue();
+            case SCORE_ABOVE -> score != null
+                    && score >= achievement.getTargetValue();
+        };
     }
 
-    private void evaluateQuizCountAchievement(User user, Integer totalQuizzesCompleted) {
-        if (totalQuizzesCompleted != null && totalQuizzesCompleted >= 5) {
-            Optional<Achievement> achievement = achievementRepository
-                    .findByConditionTypeAndTargetValue(ConditionType.QUIZ_COUNT, 5);
-
-            achievement.ifPresent(a -> unlockAchievementIfNew(user, a, totalQuizzesCompleted));
-        }
+    private int getProgressValue(Achievement achievement, Integer score, Integer totalQuizzesCompleted) {
+        return switch (achievement.getConditionType()) {
+            case FIRST_QUIZ_COMPLETED, QUIZ_COUNT -> totalQuizzesCompleted;
+            case SCORE_ABOVE -> score;
+        };
     }
 
     private void unlockAchievementIfNew(User user, Achievement achievement, Integer progress) {
