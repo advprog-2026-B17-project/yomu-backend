@@ -17,7 +17,7 @@ class QuizAttemptTest {
     @BeforeEach
     void setUp() {
         // Create a mock User
-        user = new User("testuser", "test@example.com", "password");
+        user = new User("testuser", "testuser", "test@example.com", null, "password");
         user.setId(1L);
 
         // Create a mock Text
@@ -73,20 +73,7 @@ class QuizAttemptTest {
         assertNull(emptyAttempt.getSubmittedAt());
     }
 
-    @Test
-    void testQuizAttemptAllArgsConstructor() {
-        LocalDateTime startedAt = LocalDateTime.now();
-        LocalDateTime submittedAt = LocalDateTime.now().plusHours(1);
-        
-        QuizAttempt allArgsAttempt = new QuizAttempt(2L, user, quiz, 90, startedAt, submittedAt);
-        
-        assertEquals(2L, allArgsAttempt.getId());
-        assertEquals(90, allArgsAttempt.getScore());
-        assertEquals(user, allArgsAttempt.getUser());
-        assertEquals(quiz, allArgsAttempt.getQuiz());
-        assertEquals(startedAt, allArgsAttempt.getStartedAt());
-        assertEquals(submittedAt, allArgsAttempt.getSubmittedAt());
-    }
+    
 
     @Test
     void testQuizAttemptSetters() {

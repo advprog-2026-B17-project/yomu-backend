@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class TextServiceImpl implements TextService {
-
     private final TextRepository textRepository;
     private final TextMapper textMapper;
 
