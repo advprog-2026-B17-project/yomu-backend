@@ -19,6 +19,7 @@ public class AchievementMapper {
                 .description(achievement.getDescription())
                 .conditionType(achievement.getConditionType())
                 .targetValue(achievement.getTargetValue())
+                .iconUrl(achievement.getIconUrl())
                 .build();
     }
 

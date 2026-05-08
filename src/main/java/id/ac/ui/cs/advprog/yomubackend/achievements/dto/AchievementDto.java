@@ -16,4 +16,5 @@ public class AchievementDto {
     private String description;
     private ConditionType conditionType;
     private Integer targetValue;
+    private String iconUrl;
 }
