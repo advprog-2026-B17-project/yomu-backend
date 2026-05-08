@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,6 +38,7 @@ public class AchievementServiceImpl implements AchievementService {
     private final UserAchievementStatsRepository userAchievementStatsRepository;
     private final UserRepository userRepository;
     private final AchievementMapper achievementMapper;
+    private final DailyMissionService dailyMissionService;
 
     @Autowired
     public AchievementServiceImpl(
@@ -45,13 +47,15 @@ public class AchievementServiceImpl implements AchievementService {
             ProcessedQuizCompletedEventRepository processedEventRepository,
             UserAchievementStatsRepository userAchievementStatsRepository,
             UserRepository userRepository,
-            AchievementMapper achievementMapper) {
+            AchievementMapper achievementMapper,
+            DailyMissionService dailyMissionService) {
         this.achievementRepository = achievementRepository;
         this.userAchievementRepository = userAchievementRepository;
         this.processedEventRepository = processedEventRepository;
         this.userAchievementStatsRepository = userAchievementStatsRepository;
         this.userRepository = userRepository;
         this.achievementMapper = achievementMapper;
+        this.dailyMissionService = dailyMissionService;
     }
 
     @Override
@@ -156,7 +160,15 @@ public class AchievementServiceImpl implements AchievementService {
                 .build());
 
         evaluateAndUnlockAchievements(user.getId(), stats.getBestScore(), stats.getTotalQuizzesCompleted());
+        dailyMissionService.updateProgressForQuizCompleted(user, score, resolveCompletedDate(event));
         return true;
+    }
+
+    private LocalDate resolveCompletedDate(QuizCompletedEvent event) {
+        if (event.getCompletedAt() == null) {
+            return LocalDate.now();
+        }
+        return event.getCompletedAt().toLocalDate();
     }
 
     private int getProgressValue(Achievement achievement, Integer score, Integer totalQuizzesCompleted) {

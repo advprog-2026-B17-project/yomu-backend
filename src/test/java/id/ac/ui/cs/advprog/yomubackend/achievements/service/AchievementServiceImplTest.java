@@ -50,6 +50,9 @@ class AchievementServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private DailyMissionService dailyMissionService;
+
     private AchievementServiceImpl achievementService;
 
     @BeforeEach
@@ -60,7 +63,8 @@ class AchievementServiceImplTest {
                 processedEventRepository,
                 userAchievementStatsRepository,
                 userRepository,
-                new AchievementMapper()
+                new AchievementMapper(),
+                dailyMissionService
         );
     }
 
@@ -190,6 +194,7 @@ class AchievementServiceImplTest {
         assertFalse(result);
         verify(userAchievementStatsRepository, never()).save(any());
         verify(userAchievementRepository, never()).save(any());
+        verify(dailyMissionService, never()).updateProgressForQuizCompleted(any(), any(), any());
     }
 
     @Test
@@ -244,6 +249,11 @@ class AchievementServiceImplTest {
                 ArgumentCaptor.forClass(ProcessedQuizCompletedEvent.class);
         verify(processedEventRepository).save(eventCaptor.capture());
         assertEquals(100L, eventCaptor.getValue().getAttemptId());
+        verify(dailyMissionService).updateProgressForQuizCompleted(
+                eq(user),
+                eq(3),
+                eq(event.getCompletedAt().toLocalDate())
+        );
 
         ArgumentCaptor<UserAchievement> achievementCaptor = ArgumentCaptor.forClass(UserAchievement.class);
         verify(userAchievementRepository, times(3)).save(achievementCaptor.capture());
