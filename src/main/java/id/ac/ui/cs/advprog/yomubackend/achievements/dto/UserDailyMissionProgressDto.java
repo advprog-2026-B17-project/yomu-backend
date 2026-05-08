@@ -11,14 +11,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserAchievementDto {
+public class UserDailyMissionProgressDto {
     private Long id;
     private Long userId;
-    private AchievementDto achievement;
+    private DailyMissionDto dailyMission;
     private Integer progress;
-    private Integer progressPercent;
-    private Boolean isCompleted;
-    private LocalDateTime achievementDate;
-    private Boolean showcased;
-    private Integer showcaseOrder;
+    private Boolean completed;
+    private Boolean claimed;
+    private LocalDateTime completedAt;
+    private LocalDateTime claimedAt;
 }

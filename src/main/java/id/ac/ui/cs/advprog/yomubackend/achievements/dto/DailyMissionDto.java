@@ -6,16 +6,19 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AchievementDto {
+public class DailyMissionDto {
     private Long id;
-    private String name;
+    private String title;
     private String description;
     private ConditionType conditionType;
     private Integer targetValue;
-    private String iconUrl;
+    private Integer rewardPoints;
+    private LocalDate activeDate;
     private Boolean active;
 }

@@ -11,14 +11,16 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_achievements", uniqueConstraints = @UniqueConstraint(name = "uk_user_achievement_user_achievement", columnNames = {
-        "user_id", "achievement_id" }))
+@Table(name = "user_daily_mission_progress", uniqueConstraints = @UniqueConstraint(
+        name = "uk_user_daily_mission_progress_user_mission",
+        columnNames = {"user_id", "daily_mission_id"}
+))
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserAchievement {
+public class UserDailyMissionProgress {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,8 +30,8 @@ public class UserAchievement {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "achievement_id", nullable = false)
-    private Achievement achievement;
+    @JoinColumn(name = "daily_mission_id", nullable = false)
+    private DailyMission dailyMission;
 
     @Column(nullable = false)
     @Builder.Default
@@ -37,14 +39,13 @@ public class UserAchievement {
 
     @Column(nullable = false)
     @Builder.Default
-    private Boolean isCompleted = false;
-
-    private LocalDateTime achievementDate;
+    private Boolean completed = false;
 
     @Column(nullable = false)
     @Builder.Default
-    private Boolean showcased = false;
+    private Boolean claimed = false;
 
-    @Column(name = "showcase_order")
-    private Integer showcaseOrder;
+    private LocalDateTime completedAt;
+
+    private LocalDateTime claimedAt;
 }
