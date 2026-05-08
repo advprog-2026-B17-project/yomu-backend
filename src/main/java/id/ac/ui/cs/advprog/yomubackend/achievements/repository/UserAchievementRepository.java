@@ -16,4 +16,6 @@ public interface UserAchievementRepository extends JpaRepository<UserAchievement
     List<UserAchievement> findAllByUserId(Long userId);
 
     Optional<UserAchievement> findByUserIdAndAchievementId(Long userId, Long achievementId);
+
+    List<UserAchievement> findAllByUserIdAndIsCompletedTrueAndShowcasedTrueOrderByShowcaseOrderAsc(Long userId);
 }

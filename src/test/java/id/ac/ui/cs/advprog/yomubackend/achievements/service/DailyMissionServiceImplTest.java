@@ -7,6 +7,7 @@ import id.ac.ui.cs.advprog.yomubackend.achievements.dto.UserDailyMissionProgress
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.DailyMission;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.UserDailyMissionProgress;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.types.ConditionType;
+import id.ac.ui.cs.advprog.yomubackend.achievements.exception.AchievementConflictException;
 import id.ac.ui.cs.advprog.yomubackend.achievements.mapper.DailyMissionMapper;
 import id.ac.ui.cs.advprog.yomubackend.achievements.repository.DailyMissionRepository;
 import id.ac.ui.cs.advprog.yomubackend.achievements.repository.UserDailyMissionProgressRepository;
@@ -168,7 +169,7 @@ class DailyMissionServiceImplTest {
                 .build();
         when(progressRepository.findByUserIdAndDailyMissionId(1L, 2L)).thenReturn(Optional.of(progress));
 
-        assertThrows(IllegalStateException.class, () -> service.claimMission(user, 2L));
+        assertThrows(AchievementConflictException.class, () -> service.claimMission(user, 2L));
     }
 
     @Test

@@ -48,10 +48,16 @@ public class UserAchievementController {
     }
 
     @GetMapping("/users/{id}/achievements")
-    public ResponseEntity<Page<UserAchievementDto>> getUserAchievements(
-            @PathVariable Long id,
-            @PageableDefault(size = 10) Pageable pageable) {
-        return ResponseEntity.ok(achievementService.getUserAchievementProgress(id, pageable));
+    public ResponseEntity<List<UserAchievementDto>> getUserAchievements(@PathVariable Long id) {
+        return ResponseEntity.ok(achievementService.getPublicUserAchievements(id));
+    }
+
+    @GetMapping("/users/me/achievements")
+    public ResponseEntity<Page<UserAchievementDto>> getMyAchievementProgress(
+            @PageableDefault(size = 10) Pageable pageable,
+            @AuthenticationPrincipal UserDetails principal) {
+        User user = getAuthenticatedUser(principal);
+        return ResponseEntity.ok(achievementService.getUserAchievementProgress(user.getId(), pageable));
     }
 
     @PutMapping("/users/me/achievements/showcase")

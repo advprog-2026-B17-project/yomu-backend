@@ -10,6 +10,7 @@ import id.ac.ui.cs.advprog.yomubackend.achievements.entity.ProcessedQuizComplete
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.UserAchievement;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.UserAchievementStats;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.types.ConditionType;
+import id.ac.ui.cs.advprog.yomubackend.achievements.exception.AchievementConflictException;
 import id.ac.ui.cs.advprog.yomubackend.achievements.exception.AchievementNotFoundException;
 import id.ac.ui.cs.advprog.yomubackend.achievements.mapper.AchievementMapper;
 import id.ac.ui.cs.advprog.yomubackend.achievements.repository.AchievementRepository;
@@ -81,6 +82,7 @@ class AchievementServiceImplTest {
                 .conditionType(ConditionType.FIRST_QUIZ_COMPLETED)
                 .targetValue(1)
                 .iconUrl(" https://example.com/icon.png ")
+                .active(null)
                 .build();
 
         when(achievementRepository.save(any(Achievement.class))).thenAnswer(invocation -> {
@@ -97,6 +99,7 @@ class AchievementServiceImplTest {
         assertEquals(ConditionType.FIRST_QUIZ_COMPLETED, result.getConditionType());
         assertEquals(1, result.getTargetValue());
         assertEquals("https://example.com/icon.png", result.getIconUrl());
+        assertTrue(result.getActive());
 
         ArgumentCaptor<Achievement> captor = ArgumentCaptor.forClass(Achievement.class);
         verify(achievementRepository).save(captor.capture());
@@ -168,20 +171,29 @@ class AchievementServiceImplTest {
 
     @Test
     void deleteAchievement_DeletesExistingAchievement() {
-        when(achievementRepository.existsById(1L)).thenReturn(true);
+        Achievement existing = Achievement.builder()
+                .id(1L)
+                .name("Old")
+                .description("Old description")
+                .conditionType(ConditionType.QUIZ_COUNT)
+                .targetValue(5)
+                .active(true)
+                .build();
+        when(achievementRepository.findById(1L)).thenReturn(Optional.of(existing));
 
         achievementService.deleteAchievement(1L);
 
-        verify(achievementRepository).deleteById(1L);
+        assertFalse(existing.getActive());
+        verify(achievementRepository).save(existing);
     }
 
     @Test
     void deleteAchievement_ThrowsWhenNotFound() {
-        when(achievementRepository.existsById(99L)).thenReturn(false);
+        when(achievementRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(AchievementNotFoundException.class,
                 () -> achievementService.deleteAchievement(99L));
-        verify(achievementRepository, never()).deleteById(any());
+        verify(achievementRepository, never()).save(any());
     }
 
     @Test
@@ -211,7 +223,7 @@ class AchievementServiceImplTest {
                 .build();
         when(userRepository.existsById(1L)).thenReturn(true);
         when(userAchievementRepository.findAllByUserId(1L)).thenReturn(List.of(existingProgress));
-        when(achievementRepository.findAll(PageRequest.of(0, 10)))
+        when(achievementRepository.findByActiveTrue(PageRequest.of(0, 10)))
                 .thenReturn(new PageImpl<>(List.of(firstQuiz, fiveQuizzes)));
 
         Page<UserAchievementDto> result = achievementService.getUserAchievementProgress(
@@ -222,6 +234,39 @@ class AchievementServiceImplTest {
         assertEquals(2, result.getContent().size());
         assertEquals(0, result.getContent().get(0).getProgress());
         assertEquals(40, result.getContent().get(1).getProgressPercent());
+    }
+
+    @Test
+    void getPublicUserAchievements_ReturnsCompletedShowcasedAchievementsOnly() {
+        User user = new User();
+        user.setId(1L);
+        Achievement firstQuiz = Achievement.builder()
+                .id(10L)
+                .name("First Quiz")
+                .description("Complete first quiz")
+                .conditionType(ConditionType.FIRST_QUIZ_COMPLETED)
+                .targetValue(1)
+                .active(true)
+                .build();
+        UserAchievement showcased = UserAchievement.builder()
+                .id(20L)
+                .user(user)
+                .achievement(firstQuiz)
+                .progress(1)
+                .isCompleted(true)
+                .showcased(true)
+                .showcaseOrder(1)
+                .build();
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userAchievementRepository
+                .findAllByUserIdAndIsCompletedTrueAndShowcasedTrueOrderByShowcaseOrderAsc(1L))
+                .thenReturn(List.of(showcased));
+
+        List<UserAchievementDto> result = achievementService.getPublicUserAchievements(1L);
+
+        assertEquals(1, result.size());
+        assertTrue(result.get(0).getShowcased());
+        assertTrue(result.get(0).getIsCompleted());
     }
 
     @Test
@@ -306,7 +351,7 @@ class AchievementServiceImplTest {
         when(userAchievementRepository.findByUserIdAndAchievementId(1L, 11L))
                 .thenReturn(Optional.of(incomplete));
 
-        assertThrows(IllegalArgumentException.class, () -> achievementService.updateShowcase(1L, request));
+        assertThrows(AchievementConflictException.class, () -> achievementService.updateShowcase(1L, request));
     }
 
     @Test
@@ -372,7 +417,7 @@ class AchievementServiceImplTest {
         when(processedEventRepository.existsByAttemptId(100L)).thenReturn(false);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userAchievementStatsRepository.findByUserId(1L)).thenReturn(Optional.empty());
-        when(achievementRepository.findAll()).thenReturn(List.of(firstQuiz, fiveQuizzes, highScore));
+        when(achievementRepository.findByActiveTrue()).thenReturn(List.of(firstQuiz, fiveQuizzes, highScore));
         when(userAchievementRepository.findByUserIdAndAchievementId(eq(1L), any()))
                 .thenReturn(Optional.empty());
 

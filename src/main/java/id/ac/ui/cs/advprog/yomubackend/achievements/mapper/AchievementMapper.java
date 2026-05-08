@@ -20,6 +20,7 @@ public class AchievementMapper {
                 .conditionType(achievement.getConditionType())
                 .targetValue(achievement.getTargetValue())
                 .iconUrl(achievement.getIconUrl())
+                .active(achievement.getActive())
                 .build();
     }
 

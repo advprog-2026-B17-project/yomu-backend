@@ -19,7 +19,7 @@ public class AchievementEventController {
         this.achievementService = achievementService;
     }
 
-    @PostMapping("/quiz-completed")
+    @PostMapping({"/quiz-completed", "/quiz_completed"})
     public ResponseEntity<Map<String, String>> handleQuizCompleted(
             @RequestBody QuizCompletedEvent event) {
         boolean processed = achievementService.processQuizCompletedEvent(event);

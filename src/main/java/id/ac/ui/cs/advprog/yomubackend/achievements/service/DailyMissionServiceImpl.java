@@ -7,6 +7,8 @@ import id.ac.ui.cs.advprog.yomubackend.achievements.dto.UserDailyMissionProgress
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.DailyMission;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.UserDailyMissionProgress;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.types.ConditionType;
+import id.ac.ui.cs.advprog.yomubackend.achievements.exception.AchievementConflictException;
+import id.ac.ui.cs.advprog.yomubackend.achievements.exception.DailyMissionNotFoundException;
 import id.ac.ui.cs.advprog.yomubackend.achievements.mapper.DailyMissionMapper;
 import id.ac.ui.cs.advprog.yomubackend.achievements.repository.DailyMissionRepository;
 import id.ac.ui.cs.advprog.yomubackend.achievements.repository.UserDailyMissionProgressRepository;
@@ -95,13 +97,13 @@ public class DailyMissionServiceImpl implements DailyMissionService {
     public DailyMissionClaimResponse claimMission(User user, Long missionId) {
         UserDailyMissionProgress progress = progressRepository
                 .findByUserIdAndDailyMissionId(user.getId(), missionId)
-                .orElseThrow(() -> new IllegalArgumentException("Daily mission progress not found"));
+                .orElseThrow(() -> new DailyMissionNotFoundException(missionId));
 
         if (!progress.getCompleted()) {
-            throw new IllegalStateException("Daily mission is not completed");
+            throw new AchievementConflictException("Daily mission is not completed");
         }
         if (progress.getClaimed()) {
-            throw new IllegalStateException("Daily mission reward already claimed");
+            throw new AchievementConflictException("Daily mission reward already claimed");
         }
 
         progress.setClaimed(true);
@@ -157,7 +159,7 @@ public class DailyMissionServiceImpl implements DailyMissionService {
 
     private DailyMission findMissionById(Long id) {
         return dailyMissionRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Daily mission not found: " + id));
+                .orElseThrow(() -> new DailyMissionNotFoundException(id));
     }
 
     private void validateRequest(DailyMissionRequest request) {

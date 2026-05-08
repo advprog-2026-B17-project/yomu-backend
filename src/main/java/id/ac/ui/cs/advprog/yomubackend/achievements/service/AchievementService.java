@@ -16,6 +16,8 @@ public interface AchievementService {
 
     Page<UserAchievementDto> getUserAchievementProgress(Long userId, Pageable pageable);
 
+    List<UserAchievementDto> getPublicUserAchievements(Long userId);
+
     AchievementDto getAchievementById(Long id);
 
     AchievementDto createAchievement(AchievementCreateRequest request);

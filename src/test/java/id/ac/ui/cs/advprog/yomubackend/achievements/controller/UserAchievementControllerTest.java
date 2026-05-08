@@ -18,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -94,6 +96,48 @@ class UserAchievementControllerTest {
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         verify(achievementService).deleteAchievement(1L);
+    }
+
+    @Test
+    void getUserAchievements_ReturnsPublicShowcaseOnly() {
+        UserAchievementDto publicAchievement = UserAchievementDto.builder()
+                .userId(2L)
+                .achievement(achievementDto)
+                .isCompleted(true)
+                .showcased(true)
+                .showcaseOrder(1)
+                .build();
+        when(achievementService.getPublicUserAchievements(2L)).thenReturn(List.of(publicAchievement));
+
+        ResponseEntity<List<UserAchievementDto>> response = controller.getUserAchievements(2L);
+
+        assertEquals(1, response.getBody().size());
+        assertTrue(response.getBody().get(0).getShowcased());
+        verify(achievementService).getPublicUserAchievements(2L);
+    }
+
+    @Test
+    void getMyAchievementProgress_UsesAuthenticatedUser() {
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("reader");
+        UserAchievementDto progress = UserAchievementDto.builder()
+                .userId(1L)
+                .achievement(achievementDto)
+                .progress(0)
+                .progressPercent(0)
+                .isCompleted(false)
+                .build();
+        PageRequest pageable = PageRequest.of(0, 10);
+        when(principal.getUsername()).thenReturn("reader");
+        when(userRepository.findByUsername("reader")).thenReturn(Optional.of(user));
+        when(achievementService.getUserAchievementProgress(1L, pageable))
+                .thenReturn(new PageImpl<>(List.of(progress)));
+
+        ResponseEntity<?> response = controller.getMyAchievementProgress(pageable, principal);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(achievementService).getUserAchievementProgress(1L, pageable);
     }
 
     @Test

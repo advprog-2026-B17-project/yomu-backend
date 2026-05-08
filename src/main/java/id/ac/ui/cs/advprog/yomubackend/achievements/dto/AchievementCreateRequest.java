@@ -16,4 +16,5 @@ public class AchievementCreateRequest {
     private ConditionType conditionType;
     private Integer targetValue;
     private String iconUrl;
+    private Boolean active;
 }

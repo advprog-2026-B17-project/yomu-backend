@@ -10,7 +10,9 @@ import id.ac.ui.cs.advprog.yomubackend.achievements.entity.ProcessedQuizComplete
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.UserAchievement;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.UserAchievementStats;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.types.ConditionType;
+import id.ac.ui.cs.advprog.yomubackend.achievements.exception.AchievementConflictException;
 import id.ac.ui.cs.advprog.yomubackend.achievements.exception.AchievementNotFoundException;
+import id.ac.ui.cs.advprog.yomubackend.achievements.exception.UserAchievementAccessException;
 import id.ac.ui.cs.advprog.yomubackend.achievements.mapper.AchievementMapper;
 import id.ac.ui.cs.advprog.yomubackend.achievements.repository.AchievementRepository;
 import id.ac.ui.cs.advprog.yomubackend.achievements.repository.ProcessedQuizCompletedEventRepository;
@@ -67,7 +69,7 @@ public class AchievementServiceImpl implements AchievementService {
     @Override
     @Transactional(readOnly = true)
     public Page<AchievementDto> getAllAchievements(Pageable pageable) {
-        return achievementRepository.findAll(pageable)
+        return achievementRepository.findByActiveTrue(pageable)
                 .map(achievementMapper::toDto);
     }
 
@@ -83,12 +85,24 @@ public class AchievementServiceImpl implements AchievementService {
                         Function.identity()
                 ));
 
-        return achievementRepository.findAll(pageable)
+        return achievementRepository.findByActiveTrue(pageable)
                 .map(achievement -> achievementMapper.toUserAchievementProgressDto(
                         userId,
                         achievement,
                         progressByAchievementId.get(achievement.getId())
                 ));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserAchievementDto> getPublicUserAchievements(Long userId) {
+        ensureUserExists(userId);
+        return userAchievementRepository
+                .findAllByUserIdAndIsCompletedTrueAndShowcasedTrueOrderByShowcaseOrderAsc(userId)
+                .stream()
+                .filter(userAchievement -> userAchievement.getAchievement().getActive())
+                .map(achievementMapper::toUserAchievementDto)
+                .toList();
     }
 
     @Override
@@ -109,6 +123,7 @@ public class AchievementServiceImpl implements AchievementService {
                 .conditionType(request.getConditionType())
                 .targetValue(request.getTargetValue())
                 .iconUrl(normalizeOptionalText(request.getIconUrl()))
+                .active(request.getActive() == null || request.getActive())
                 .build();
 
         return achievementMapper.toDto(achievementRepository.save(achievement));
@@ -126,24 +141,25 @@ public class AchievementServiceImpl implements AchievementService {
         achievement.setConditionType(request.getConditionType());
         achievement.setTargetValue(request.getTargetValue());
         achievement.setIconUrl(normalizeOptionalText(request.getIconUrl()));
+        achievement.setActive(request.getActive() == null || request.getActive());
 
         return achievementMapper.toDto(achievementRepository.save(achievement));
     }
 
     @Override
     public void deleteAchievement(Long id) {
-        if (!achievementRepository.existsById(id)) {
-            throw new AchievementNotFoundException(id);
-        }
-        achievementRepository.deleteById(id);
+        Achievement achievement = achievementRepository.findById(id)
+                .orElseThrow(() -> new AchievementNotFoundException(id));
+        achievement.setActive(false);
+        achievementRepository.save(achievement);
     }
 
     @Override
     public void evaluateAndUnlockAchievements(Long userId, Integer score, Integer totalQuizzesCompleted) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new UserAchievementAccessException(userId));
 
-        List<Achievement> allAchievements = achievementRepository.findAll();
+        List<Achievement> allAchievements = achievementRepository.findByActiveTrue();
 
         for (Achievement achievement : allAchievements) {
             int progressValue = getProgressValue(achievement, score, totalQuizzesCompleted);
@@ -160,7 +176,7 @@ public class AchievementServiceImpl implements AchievementService {
         }
 
         User user = userRepository.findById(event.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + event.getUserId()));
+                .orElseThrow(() -> new UserAchievementAccessException(event.getUserId()));
 
         UserAchievementStats stats = userAchievementStatsRepository.findByUserId(user.getId())
                 .orElseGet(() -> UserAchievementStats.builder()
@@ -268,6 +284,9 @@ public class AchievementServiceImpl implements AchievementService {
         if (event.getScore() == null) {
             throw new IllegalArgumentException("Quiz completed event score is required");
         }
+        if (event.getScore() < 0 || event.getScore() > 100) {
+            throw new IllegalArgumentException("Quiz completed event score must be between 0 and 100");
+        }
     }
 
     private void validateShowcaseRequest(AchievementShowcaseUpdateRequest request) {
@@ -289,19 +308,19 @@ public class AchievementServiceImpl implements AchievementService {
     private UserAchievement findCompletedUserAchievement(Long userId, Long achievementId) {
         UserAchievement userAchievement = userAchievementRepository
                 .findByUserIdAndAchievementId(userId, achievementId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new AchievementConflictException(
                         "Completed achievement not found: " + achievementId
                 ));
 
         if (!userAchievement.getIsCompleted()) {
-            throw new IllegalArgumentException("Achievement is not completed: " + achievementId);
+            throw new AchievementConflictException("Achievement is not completed: " + achievementId);
         }
         return userAchievement;
     }
 
     private void ensureUserExists(Long userId) {
         if (!userRepository.existsById(userId)) {
-            throw new IllegalArgumentException("User not found: " + userId);
+            throw new UserAchievementAccessException(userId);
         }
     }
 

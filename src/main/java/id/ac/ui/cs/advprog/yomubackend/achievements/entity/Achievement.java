@@ -35,4 +35,8 @@ public class Achievement {
 
     @Column(name = "icon_url")
     private String iconUrl;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean active = true;
 }
