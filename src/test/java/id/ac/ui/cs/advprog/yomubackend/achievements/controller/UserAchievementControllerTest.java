@@ -2,9 +2,13 @@ package id.ac.ui.cs.advprog.yomubackend.achievements.controller;
 
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementCreateRequest;
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementDto;
+import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementShowcaseUpdateRequest;
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementUpdateRequest;
+import id.ac.ui.cs.advprog.yomubackend.achievements.dto.UserAchievementDto;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.types.ConditionType;
 import id.ac.ui.cs.advprog.yomubackend.achievements.service.AchievementService;
+import id.ac.ui.cs.advprog.yomubackend.auth.entity.User;
+import id.ac.ui.cs.advprog.yomubackend.auth.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,8 +17,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -25,12 +32,18 @@ class UserAchievementControllerTest {
     @Mock
     private AchievementService achievementService;
 
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private UserDetails principal;
+
     private UserAchievementController controller;
     private AchievementDto achievementDto;
 
     @BeforeEach
     void setUp() {
-        controller = new UserAchievementController(achievementService);
+        controller = new UserAchievementController(achievementService, userRepository);
         achievementDto = AchievementDto.builder()
                 .id(1L)
                 .name("First Quiz")
@@ -81,6 +94,35 @@ class UserAchievementControllerTest {
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
         verify(achievementService).deleteAchievement(1L);
+    }
+
+    @Test
+    void updateMyAchievementShowcase_UsesAuthenticatedUser() {
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("reader");
+        AchievementShowcaseUpdateRequest request = AchievementShowcaseUpdateRequest.builder()
+                .achievementIds(List.of(1L))
+                .build();
+        UserAchievementDto showcasedAchievement = UserAchievementDto.builder()
+                .userId(1L)
+                .achievement(achievementDto)
+                .progress(1)
+                .progressPercent(100)
+                .isCompleted(true)
+                .showcased(true)
+                .showcaseOrder(1)
+                .build();
+        when(principal.getUsername()).thenReturn("reader");
+        when(userRepository.findByUsername("reader")).thenReturn(Optional.of(user));
+        when(achievementService.updateShowcase(1L, request)).thenReturn(List.of(showcasedAchievement));
+
+        ResponseEntity<List<UserAchievementDto>> response =
+                controller.updateMyAchievementShowcase(request, principal);
+
+        assertEquals(1, response.getBody().size());
+        assertTrue(response.getBody().get(0).getShowcased());
+        verify(achievementService).updateShowcase(1L, request);
     }
 
     @Test

@@ -2,6 +2,7 @@ package id.ac.ui.cs.advprog.yomubackend.achievements.service;
 
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementCreateRequest;
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementDto;
+import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementShowcaseUpdateRequest;
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementUpdateRequest;
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.UserAchievementDto;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.Achievement;
@@ -26,8 +27,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -68,8 +74,21 @@ public class AchievementServiceImpl implements AchievementService {
     @Override
     @Transactional(readOnly = true)
     public Page<UserAchievementDto> getUserAchievementProgress(Long userId, Pageable pageable) {
-        return userAchievementRepository.findByUserId(userId, pageable)
-                .map(achievementMapper::toUserAchievementDto);
+        ensureUserExists(userId);
+        Map<Long, UserAchievement> progressByAchievementId = userAchievementRepository
+                .findAllByUserId(userId)
+                .stream()
+                .collect(Collectors.toMap(
+                        userAchievement -> userAchievement.getAchievement().getId(),
+                        Function.identity()
+                ));
+
+        return achievementRepository.findAll(pageable)
+                .map(achievement -> achievementMapper.toUserAchievementProgressDto(
+                        userId,
+                        achievement,
+                        progressByAchievementId.get(achievement.getId())
+                ));
     }
 
     @Override
@@ -164,6 +183,35 @@ public class AchievementServiceImpl implements AchievementService {
         return true;
     }
 
+    @Override
+    public List<UserAchievementDto> updateShowcase(Long userId, AchievementShowcaseUpdateRequest request) {
+        ensureUserExists(userId);
+        validateShowcaseRequest(request);
+
+        List<UserAchievement> currentAchievements = userAchievementRepository.findAllByUserId(userId);
+        for (UserAchievement userAchievement : currentAchievements) {
+            userAchievement.setShowcased(false);
+            userAchievement.setShowcaseOrder(null);
+        }
+        userAchievementRepository.saveAll(currentAchievements);
+
+        List<UserAchievement> showcasedAchievements = request.getAchievementIds()
+                .stream()
+                .map(achievementId -> findCompletedUserAchievement(userId, achievementId))
+                .toList();
+
+        for (int index = 0; index < showcasedAchievements.size(); index++) {
+            UserAchievement userAchievement = showcasedAchievements.get(index);
+            userAchievement.setShowcased(true);
+            userAchievement.setShowcaseOrder(index + 1);
+        }
+
+        return userAchievementRepository.saveAll(showcasedAchievements)
+                .stream()
+                .map(achievementMapper::toUserAchievementDto)
+                .toList();
+    }
+
     private LocalDate resolveCompletedDate(QuizCompletedEvent event) {
         if (event.getCompletedAt() == null) {
             return LocalDate.now();
@@ -219,6 +267,41 @@ public class AchievementServiceImpl implements AchievementService {
         }
         if (event.getScore() == null) {
             throw new IllegalArgumentException("Quiz completed event score is required");
+        }
+    }
+
+    private void validateShowcaseRequest(AchievementShowcaseUpdateRequest request) {
+        if (request == null || request.getAchievementIds() == null) {
+            throw new IllegalArgumentException("Achievement showcase request is required");
+        }
+
+        Set<Long> uniqueAchievementIds = new HashSet<>();
+        for (Long achievementId : request.getAchievementIds()) {
+            if (achievementId == null) {
+                throw new IllegalArgumentException("Achievement showcase id is required");
+            }
+            if (!uniqueAchievementIds.add(achievementId)) {
+                throw new IllegalArgumentException("Achievement showcase cannot contain duplicates");
+            }
+        }
+    }
+
+    private UserAchievement findCompletedUserAchievement(Long userId, Long achievementId) {
+        UserAchievement userAchievement = userAchievementRepository
+                .findByUserIdAndAchievementId(userId, achievementId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Completed achievement not found: " + achievementId
+                ));
+
+        if (!userAchievement.getIsCompleted()) {
+            throw new IllegalArgumentException("Achievement is not completed: " + achievementId);
+        }
+        return userAchievement;
+    }
+
+    private void ensureUserExists(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("User not found: " + userId);
         }
     }
 

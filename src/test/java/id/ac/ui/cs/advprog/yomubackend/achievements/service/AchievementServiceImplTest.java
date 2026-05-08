@@ -2,7 +2,9 @@ package id.ac.ui.cs.advprog.yomubackend.achievements.service;
 
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementCreateRequest;
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementDto;
+import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementShowcaseUpdateRequest;
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementUpdateRequest;
+import id.ac.ui.cs.advprog.yomubackend.achievements.dto.UserAchievementDto;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.Achievement;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.ProcessedQuizCompletedEvent;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.UserAchievement;
@@ -23,6 +25,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -177,6 +182,141 @@ class AchievementServiceImplTest {
         assertThrows(AchievementNotFoundException.class,
                 () -> achievementService.deleteAchievement(99L));
         verify(achievementRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void getUserAchievementProgress_ReturnsAllCatalogAchievementsWithProgress() {
+        Achievement firstQuiz = Achievement.builder()
+                .id(10L)
+                .name("First Quiz")
+                .description("Complete first quiz")
+                .conditionType(ConditionType.FIRST_QUIZ_COMPLETED)
+                .targetValue(1)
+                .build();
+        Achievement fiveQuizzes = Achievement.builder()
+                .id(11L)
+                .name("Five Quizzes")
+                .description("Complete five quizzes")
+                .conditionType(ConditionType.QUIZ_COUNT)
+                .targetValue(5)
+                .build();
+        User user = new User();
+        user.setId(1L);
+        UserAchievement existingProgress = UserAchievement.builder()
+                .id(20L)
+                .user(user)
+                .achievement(fiveQuizzes)
+                .progress(2)
+                .isCompleted(false)
+                .build();
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userAchievementRepository.findAllByUserId(1L)).thenReturn(List.of(existingProgress));
+        when(achievementRepository.findAll(PageRequest.of(0, 10)))
+                .thenReturn(new PageImpl<>(List.of(firstQuiz, fiveQuizzes)));
+
+        Page<UserAchievementDto> result = achievementService.getUserAchievementProgress(
+                1L,
+                PageRequest.of(0, 10)
+        );
+
+        assertEquals(2, result.getContent().size());
+        assertEquals(0, result.getContent().get(0).getProgress());
+        assertEquals(40, result.getContent().get(1).getProgressPercent());
+    }
+
+    @Test
+    void updateShowcase_PersistsCompletedAchievementsInOrder() {
+        User user = new User();
+        user.setId(1L);
+        Achievement firstQuiz = Achievement.builder()
+                .id(10L)
+                .name("First Quiz")
+                .description("Complete first quiz")
+                .conditionType(ConditionType.FIRST_QUIZ_COMPLETED)
+                .targetValue(1)
+                .build();
+        Achievement highScore = Achievement.builder()
+                .id(11L)
+                .name("High Score")
+                .description("Score high")
+                .conditionType(ConditionType.SCORE_ABOVE)
+                .targetValue(90)
+                .build();
+        UserAchievement previousShowcase = UserAchievement.builder()
+                .id(19L)
+                .user(user)
+                .achievement(firstQuiz)
+                .progress(1)
+                .isCompleted(true)
+                .showcased(true)
+                .showcaseOrder(1)
+                .build();
+        UserAchievement newShowcase = UserAchievement.builder()
+                .id(20L)
+                .user(user)
+                .achievement(highScore)
+                .progress(95)
+                .isCompleted(true)
+                .showcased(false)
+                .build();
+        AchievementShowcaseUpdateRequest request = AchievementShowcaseUpdateRequest.builder()
+                .achievementIds(List.of(11L, 10L))
+                .build();
+
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userAchievementRepository.findAllByUserId(1L))
+                .thenReturn(List.of(previousShowcase, newShowcase));
+        when(userAchievementRepository.findByUserIdAndAchievementId(1L, 11L))
+                .thenReturn(Optional.of(newShowcase));
+        when(userAchievementRepository.findByUserIdAndAchievementId(1L, 10L))
+                .thenReturn(Optional.of(previousShowcase));
+        when(userAchievementRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        List<UserAchievementDto> result = achievementService.updateShowcase(1L, request);
+
+        assertEquals(2, result.size());
+        assertEquals(1, newShowcase.getShowcaseOrder());
+        assertEquals(2, previousShowcase.getShowcaseOrder());
+        assertTrue(result.stream().allMatch(UserAchievementDto::getShowcased));
+    }
+
+    @Test
+    void updateShowcase_RejectsIncompleteAchievement() {
+        User user = new User();
+        user.setId(1L);
+        Achievement fiveQuizzes = Achievement.builder()
+                .id(11L)
+                .name("Five Quizzes")
+                .description("Complete five quizzes")
+                .conditionType(ConditionType.QUIZ_COUNT)
+                .targetValue(5)
+                .build();
+        UserAchievement incomplete = UserAchievement.builder()
+                .id(20L)
+                .user(user)
+                .achievement(fiveQuizzes)
+                .progress(2)
+                .isCompleted(false)
+                .build();
+        AchievementShowcaseUpdateRequest request = AchievementShowcaseUpdateRequest.builder()
+                .achievementIds(List.of(11L))
+                .build();
+        when(userRepository.existsById(1L)).thenReturn(true);
+        when(userAchievementRepository.findAllByUserId(1L)).thenReturn(List.of(incomplete));
+        when(userAchievementRepository.findByUserIdAndAchievementId(1L, 11L))
+                .thenReturn(Optional.of(incomplete));
+
+        assertThrows(IllegalArgumentException.class, () -> achievementService.updateShowcase(1L, request));
+    }
+
+    @Test
+    void updateShowcase_RejectsDuplicateAchievementIds() {
+        AchievementShowcaseUpdateRequest request = AchievementShowcaseUpdateRequest.builder()
+                .achievementIds(List.of(11L, 11L))
+                .build();
+        when(userRepository.existsById(1L)).thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class, () -> achievementService.updateShowcase(1L, request));
     }
 
     @Test

@@ -16,6 +16,9 @@ public class UserAchievementDto {
     private Long userId;
     private AchievementDto achievement;
     private Integer progress;
+    private Integer progressPercent;
     private Boolean isCompleted;
     private LocalDateTime achievementDate;
+    private Boolean showcased;
+    private Integer showcaseOrder;
 }
