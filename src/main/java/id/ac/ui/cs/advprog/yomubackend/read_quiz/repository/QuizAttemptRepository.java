@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Long> {
@@ -21,4 +22,7 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Long> 
            "FROM QuizAttempt qa JOIN qa.quiz q JOIN q.text t " +
            "WHERE qa.user = :user AND t.id = :textId AND qa.submittedAt IS NOT NULL")
     boolean existsByUserAndTextIdSubmitted(@Param("user") User user, @Param("textId") Long textId);
+
+    @Query("SELECT qa FROM QuizAttempt qa JOIN qa.quiz q JOIN q.text t WHERE t.id = :textId AND qa.submittedAt IS NOT NULL")
+    List<QuizAttempt> findSubmittedByTextId(@Param("textId") Long textId);
 }

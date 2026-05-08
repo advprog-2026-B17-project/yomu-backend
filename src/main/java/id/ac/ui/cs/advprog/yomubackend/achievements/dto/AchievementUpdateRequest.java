@@ -10,8 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AchievementDto {
-    private Long id;
+public class AchievementUpdateRequest {
     private String name;
     private String description;
     private ConditionType conditionType;

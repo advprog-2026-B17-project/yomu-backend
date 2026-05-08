@@ -7,21 +7,25 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "achievements_catalog")
+@Table(name = "daily_missions")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Achievement {
+public class DailyMission {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, length = 255)
-    private String name;
+    private String title;
 
     @Column(nullable = false, length = 1000)
     private String description;
@@ -33,10 +37,17 @@ public class Achievement {
     @Column(nullable = false)
     private Integer targetValue;
 
-    @Column(name = "icon_url")
-    private String iconUrl;
+    @Column(nullable = false)
+    private Integer rewardPoints;
+
+    @Column(nullable = false)
+    private LocalDate activeDate;
 
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 }

@@ -1,24 +1,39 @@
 package id.ac.ui.cs.advprog.yomubackend.achievements.controller;
 
+import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementCreateRequest;
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementDto;
+import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementShowcaseUpdateRequest;
+import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementUpdateRequest;
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.UserAchievementDto;
 import id.ac.ui.cs.advprog.yomubackend.achievements.service.AchievementService;
+import id.ac.ui.cs.advprog.yomubackend.auth.entity.User;
+import id.ac.ui.cs.advprog.yomubackend.auth.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
 public class UserAchievementController {
 
     private final AchievementService achievementService;
+    private final UserRepository userRepository;
 
     @Autowired
-    public UserAchievementController(AchievementService achievementService) {
+    public UserAchievementController(
+            AchievementService achievementService,
+            UserRepository userRepository) {
         this.achievementService = achievementService;
+        this.userRepository = userRepository;
     }
 
     @GetMapping("/achievements")
@@ -33,9 +48,51 @@ public class UserAchievementController {
     }
 
     @GetMapping("/users/{id}/achievements")
-    public ResponseEntity<Page<UserAchievementDto>> getUserAchievements(
+    public ResponseEntity<List<UserAchievementDto>> getUserAchievements(@PathVariable Long id) {
+        return ResponseEntity.ok(achievementService.getPublicUserAchievements(id));
+    }
+
+    @GetMapping("/users/me/achievements")
+    public ResponseEntity<Page<UserAchievementDto>> getMyAchievementProgress(
+            @PageableDefault(size = 10) Pageable pageable,
+            @AuthenticationPrincipal UserDetails principal) {
+        User user = getAuthenticatedUser(principal);
+        return ResponseEntity.ok(achievementService.getUserAchievementProgress(user.getId(), pageable));
+    }
+
+    @PutMapping("/users/me/achievements/showcase")
+    public ResponseEntity<List<UserAchievementDto>> updateMyAchievementShowcase(
+            @RequestBody AchievementShowcaseUpdateRequest request,
+            @AuthenticationPrincipal UserDetails principal) {
+        User user = getAuthenticatedUser(principal);
+        return ResponseEntity.ok(achievementService.updateShowcase(user.getId(), request));
+    }
+
+    @PostMapping("/admin/achievements")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AchievementDto> createAchievement(
+            @RequestBody AchievementCreateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(achievementService.createAchievement(request));
+    }
+
+    @PutMapping("/admin/achievements/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AchievementDto> updateAchievement(
             @PathVariable Long id,
-            @PageableDefault(size = 10) Pageable pageable) {
-        return ResponseEntity.ok(achievementService.getUserAchievementProgress(id, pageable));
+            @RequestBody AchievementUpdateRequest request) {
+        return ResponseEntity.ok(achievementService.updateAchievement(id, request));
+    }
+
+    @DeleteMapping("/admin/achievements/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteAchievement(@PathVariable Long id) {
+        achievementService.deleteAchievement(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    private User getAuthenticatedUser(UserDetails principal) {
+        return userRepository.findByUsername(principal.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 }
