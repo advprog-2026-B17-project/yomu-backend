@@ -1,7 +1,10 @@
 package id.ac.ui.cs.advprog.yomubackend.achievements.service;
 
+import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementCreateRequest;
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementDto;
+import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementUpdateRequest;
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.UserAchievementDto;
+import id.ac.ui.cs.advprog.yomubackend.achievements.entity.types.ConditionType;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.Achievement;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.UserAchievement;
 import id.ac.ui.cs.advprog.yomubackend.achievements.exception.AchievementNotFoundException;
@@ -63,6 +66,45 @@ public class AchievementServiceImpl implements AchievementService {
     }
 
     @Override
+    public AchievementDto createAchievement(AchievementCreateRequest request) {
+        validateCreateRequest(request);
+
+        Achievement achievement = Achievement.builder()
+                .name(request.getName().trim())
+                .description(request.getDescription().trim())
+                .conditionType(request.getConditionType())
+                .targetValue(request.getTargetValue())
+                .iconUrl(normalizeOptionalText(request.getIconUrl()))
+                .build();
+
+        return achievementMapper.toDto(achievementRepository.save(achievement));
+    }
+
+    @Override
+    public AchievementDto updateAchievement(Long id, AchievementUpdateRequest request) {
+        validateUpdateRequest(request);
+
+        Achievement achievement = achievementRepository.findById(id)
+                .orElseThrow(() -> new AchievementNotFoundException(id));
+
+        achievement.setName(request.getName().trim());
+        achievement.setDescription(request.getDescription().trim());
+        achievement.setConditionType(request.getConditionType());
+        achievement.setTargetValue(request.getTargetValue());
+        achievement.setIconUrl(normalizeOptionalText(request.getIconUrl()));
+
+        return achievementMapper.toDto(achievementRepository.save(achievement));
+    }
+
+    @Override
+    public void deleteAchievement(Long id) {
+        if (!achievementRepository.existsById(id)) {
+            throw new AchievementNotFoundException(id);
+        }
+        achievementRepository.deleteById(id);
+    }
+
+    @Override
     public void evaluateAndUnlockAchievements(Long userId, Integer score, Integer totalQuizzesCompleted) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
@@ -117,5 +159,55 @@ public class AchievementServiceImpl implements AchievementService {
                     .build();
             userAchievementRepository.save(newUserAchievement);
         }
+    }
+
+    private void validateCreateRequest(AchievementCreateRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Achievement request is required");
+        }
+        validateAchievementFields(
+                request.getName(),
+                request.getDescription(),
+                request.getConditionType(),
+                request.getTargetValue()
+        );
+    }
+
+    private void validateUpdateRequest(AchievementUpdateRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Achievement request is required");
+        }
+        validateAchievementFields(
+                request.getName(),
+                request.getDescription(),
+                request.getConditionType(),
+                request.getTargetValue()
+        );
+    }
+
+    private void validateAchievementFields(
+            String name,
+            String description,
+            ConditionType conditionType,
+            Integer targetValue) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Achievement name is required");
+        }
+        if (description == null || description.isBlank()) {
+            throw new IllegalArgumentException("Achievement description is required");
+        }
+        if (conditionType == null) {
+            throw new IllegalArgumentException("Achievement conditionType is required");
+        }
+        if (targetValue == null || targetValue <= 0) {
+            throw new IllegalArgumentException("Achievement targetValue must be greater than 0");
+        }
+    }
+
+    private String normalizeOptionalText(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 }
