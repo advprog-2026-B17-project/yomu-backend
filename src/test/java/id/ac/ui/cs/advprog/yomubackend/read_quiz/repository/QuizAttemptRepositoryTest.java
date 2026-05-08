@@ -119,4 +119,33 @@ class QuizAttemptRepositoryTest {
         assertEquals(1, page.getContent().size());
         assertEquals(2, page.getTotalElements());
     }
+
+        @Test
+        void testFindSubmittedByTextId() {
+                // Create submitted attempts
+                QuizAttempt a1 = QuizAttempt.builder()
+                                .user(user)
+                                .quiz(quiz)
+                                .score(80)
+                                .startedAt(LocalDateTime.of(2024, 1, 3, 10, 0))
+                                .submittedAt(LocalDateTime.of(2024, 1, 3, 10, 10))
+                                .build();
+                entityManager.persist(a1);
+
+                QuizAttempt a2 = QuizAttempt.builder()
+                                .user(user)
+                                .quiz(quiz)
+                                .score(90)
+                                .startedAt(LocalDateTime.of(2024, 1, 4, 10, 0))
+                                .submittedAt(LocalDateTime.of(2024, 1, 4, 10, 20))
+                                .build();
+                entityManager.persist(a2);
+
+                entityManager.flush();
+                entityManager.clear();
+
+                java.util.List<QuizAttempt> attempts = quizAttemptRepository.findSubmittedByTextId(quiz.getText().getId());
+                assertNotNull(attempts);
+                assertEquals(2, attempts.size());
+        }
 }
