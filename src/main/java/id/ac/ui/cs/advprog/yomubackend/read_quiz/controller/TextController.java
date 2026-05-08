@@ -3,6 +3,9 @@ package id.ac.ui.cs.advprog.yomubackend.read_quiz.controller;
 import id.ac.ui.cs.advprog.yomubackend.read_quiz.dto.TextDto;
 import id.ac.ui.cs.advprog.yomubackend.read_quiz.dto.TextSummaryDto;
 import id.ac.ui.cs.advprog.yomubackend.read_quiz.service.TextService;
+import id.ac.ui.cs.advprog.yomubackend.read_quiz.repository.QuizAttemptRepository;
+import id.ac.ui.cs.advprog.yomubackend.read_quiz.model.QuizAttempt;
+import id.ac.ui.cs.advprog.yomubackend.read_quiz.dto.TextStatsDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,9 +28,17 @@ public class TextController {
 
     private final TextService textService;
 
+    // repository used to compute simple statistics per text
+    private QuizAttemptRepository quizAttemptRepository;
+
     @Autowired
     public TextController(TextService textService) {
         this.textService = textService;
+    }
+
+    @Autowired
+    public void setQuizAttemptRepository(QuizAttemptRepository quizAttemptRepository) {
+        this.quizAttemptRepository = quizAttemptRepository;
     }
 
     /**
@@ -67,6 +78,36 @@ public class TextController {
             @RequestParam(name = "includeQuizMetadata", required = false, defaultValue = "false") boolean includeQuizMetadata
     ) {
         TextDto dto = textService.getTextById(id, includeQuizMetadata);
+        return ResponseEntity.ok(dto);
+    }
+
+    /**
+     * Statistik singkat untuk teks (jumlah attempts yang disubmit dan rata-rata skor)
+     * GET /api/texts/{id}/stats
+     */
+    @GetMapping("/{id}/stats")
+    public ResponseEntity<TextStatsDto> getTextStats(@PathVariable("id") Long id) {
+        if (quizAttemptRepository == null) {
+            // repository not available (e.g., in some test wiring), return zeroed stats
+            return ResponseEntity.ok(TextStatsDto.builder().attempts(0).avgScore(0.0).build());
+        }
+
+        java.util.List<QuizAttempt> attempts = quizAttemptRepository.findSubmittedByTextId(id);
+        long count = attempts == null ? 0 : attempts.size();
+        double avg = 0.0;
+        if (count > 0) {
+            avg = attempts.stream()
+                    .filter(a -> a.getScore() != null)
+                    .mapToInt(a -> a.getScore())
+                    .average()
+                    .orElse(0.0);
+        }
+
+        TextStatsDto dto = TextStatsDto.builder()
+                .attempts(count)
+                .avgScore(avg)
+                .build();
+
         return ResponseEntity.ok(dto);
     }
 }
