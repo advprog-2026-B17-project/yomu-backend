@@ -4,15 +4,20 @@ import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementCreateRequest
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementDto;
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.AchievementUpdateRequest;
 import id.ac.ui.cs.advprog.yomubackend.achievements.dto.UserAchievementDto;
-import id.ac.ui.cs.advprog.yomubackend.achievements.entity.types.ConditionType;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.Achievement;
+import id.ac.ui.cs.advprog.yomubackend.achievements.entity.ProcessedQuizCompletedEvent;
 import id.ac.ui.cs.advprog.yomubackend.achievements.entity.UserAchievement;
+import id.ac.ui.cs.advprog.yomubackend.achievements.entity.UserAchievementStats;
+import id.ac.ui.cs.advprog.yomubackend.achievements.entity.types.ConditionType;
 import id.ac.ui.cs.advprog.yomubackend.achievements.exception.AchievementNotFoundException;
 import id.ac.ui.cs.advprog.yomubackend.achievements.mapper.AchievementMapper;
 import id.ac.ui.cs.advprog.yomubackend.achievements.repository.AchievementRepository;
+import id.ac.ui.cs.advprog.yomubackend.achievements.repository.ProcessedQuizCompletedEventRepository;
+import id.ac.ui.cs.advprog.yomubackend.achievements.repository.UserAchievementStatsRepository;
 import id.ac.ui.cs.advprog.yomubackend.achievements.repository.UserAchievementRepository;
 import id.ac.ui.cs.advprog.yomubackend.auth.entity.User;
 import id.ac.ui.cs.advprog.yomubackend.auth.repository.UserRepository;
+import id.ac.ui.cs.advprog.yomubackend.event.QuizCompletedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +33,8 @@ import java.util.Optional;
 public class AchievementServiceImpl implements AchievementService {
     private final AchievementRepository achievementRepository;
     private final UserAchievementRepository userAchievementRepository;
+    private final ProcessedQuizCompletedEventRepository processedEventRepository;
+    private final UserAchievementStatsRepository userAchievementStatsRepository;
     private final UserRepository userRepository;
     private final AchievementMapper achievementMapper;
 
@@ -35,10 +42,14 @@ public class AchievementServiceImpl implements AchievementService {
     public AchievementServiceImpl(
             AchievementRepository achievementRepository,
             UserAchievementRepository userAchievementRepository,
+            ProcessedQuizCompletedEventRepository processedEventRepository,
+            UserAchievementStatsRepository userAchievementStatsRepository,
             UserRepository userRepository,
             AchievementMapper achievementMapper) {
         this.achievementRepository = achievementRepository;
         this.userAchievementRepository = userAchievementRepository;
+        this.processedEventRepository = processedEventRepository;
+        this.userAchievementStatsRepository = userAchievementStatsRepository;
         this.userRepository = userRepository;
         this.achievementMapper = achievementMapper;
     }
@@ -112,52 +123,90 @@ public class AchievementServiceImpl implements AchievementService {
         List<Achievement> allAchievements = achievementRepository.findAll();
 
         for (Achievement achievement : allAchievements) {
-            if (evaluateCondition(achievement, score, totalQuizzesCompleted)) {
-                int progressValue = getProgressValue(achievement, score, totalQuizzesCompleted);
-                unlockAchievementIfNew(user, achievement, progressValue);
-            }
+            int progressValue = getProgressValue(achievement, score, totalQuizzesCompleted);
+            upsertAchievementProgress(user, achievement, progressValue);
         }
     }
 
-    private boolean evaluateCondition(Achievement achievement, Integer score, Integer totalQuizzesCompleted) {
-        return switch (achievement.getConditionType()) {
-            case FIRST_QUIZ_COMPLETED -> totalQuizzesCompleted != null
-                    && totalQuizzesCompleted >= achievement.getTargetValue();
-            case QUIZ_COUNT -> totalQuizzesCompleted != null
-                    && totalQuizzesCompleted >= achievement.getTargetValue();
-            case SCORE_ABOVE -> score != null
-                    && score >= achievement.getTargetValue();
-        };
+    @Override
+    public boolean processQuizCompletedEvent(QuizCompletedEvent event) {
+        validateQuizCompletedEvent(event);
+
+        if (processedEventRepository.existsByAttemptId(event.getAttemptId())) {
+            return false;
+        }
+
+        User user = userRepository.findById(event.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + event.getUserId()));
+
+        UserAchievementStats stats = userAchievementStatsRepository.findByUserId(user.getId())
+                .orElseGet(() -> UserAchievementStats.builder()
+                        .user(user)
+                        .build());
+        int score = Math.max(event.getScore(), 0);
+        stats.setTotalQuizzesCompleted(stats.getTotalQuizzesCompleted() + 1);
+        stats.setBestScore(Math.max(stats.getBestScore(), score));
+        userAchievementStatsRepository.save(stats);
+
+        processedEventRepository.save(ProcessedQuizCompletedEvent.builder()
+                .attemptId(event.getAttemptId())
+                .user(user)
+                .score(score)
+                .completedAt(event.getCompletedAt())
+                .build());
+
+        evaluateAndUnlockAchievements(user.getId(), stats.getBestScore(), stats.getTotalQuizzesCompleted());
+        return true;
     }
 
     private int getProgressValue(Achievement achievement, Integer score, Integer totalQuizzesCompleted) {
         return switch (achievement.getConditionType()) {
-            case FIRST_QUIZ_COMPLETED, QUIZ_COUNT -> totalQuizzesCompleted;
-            case SCORE_ABOVE -> score;
+            case FIRST_QUIZ_COMPLETED, QUIZ_COUNT -> safeProgress(totalQuizzesCompleted);
+            case SCORE_ABOVE -> safeProgress(score);
         };
     }
 
-    private void unlockAchievementIfNew(User user, Achievement achievement, Integer progress) {
+    private void upsertAchievementProgress(User user, Achievement achievement, Integer progress) {
         Optional<UserAchievement> existing = userAchievementRepository
                 .findByUserIdAndAchievementId(user.getId(), achievement.getId());
+        boolean completed = progress >= achievement.getTargetValue();
 
         if (existing.isPresent()) {
             UserAchievement ua = existing.get();
-            if (!ua.getIsCompleted()) {
-                ua.setProgress(progress);
+            ua.setProgress(Math.max(ua.getProgress(), progress));
+            if (!ua.getIsCompleted() && completed) {
                 ua.setIsCompleted(true);
                 ua.setAchievementDate(LocalDateTime.now());
-                userAchievementRepository.save(ua);
             }
+            userAchievementRepository.save(ua);
         } else {
             UserAchievement newUserAchievement = UserAchievement.builder()
                     .user(user)
                     .achievement(achievement)
                     .progress(progress)
-                    .isCompleted(true)
-                    .achievementDate(LocalDateTime.now())
+                    .isCompleted(completed)
+                    .achievementDate(completed ? LocalDateTime.now() : null)
                     .build();
             userAchievementRepository.save(newUserAchievement);
+        }
+    }
+
+    private int safeProgress(Integer value) {
+        return value == null ? 0 : Math.max(value, 0);
+    }
+
+    private void validateQuizCompletedEvent(QuizCompletedEvent event) {
+        if (event == null) {
+            throw new IllegalArgumentException("Quiz completed event is required");
+        }
+        if (event.getAttemptId() == null) {
+            throw new IllegalArgumentException("Quiz completed event attemptId is required");
+        }
+        if (event.getUserId() == null) {
+            throw new IllegalArgumentException("Quiz completed event userId is required");
+        }
+        if (event.getScore() == null) {
+            throw new IllegalArgumentException("Quiz completed event score is required");
         }
     }
 

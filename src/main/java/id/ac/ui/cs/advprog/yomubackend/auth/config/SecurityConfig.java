@@ -35,6 +35,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/quizzes/*/start").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/quizzes/attempts/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/quizzes/attempts/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/events/quiz-completed").permitAll()
                         .requestMatchers("/auth/**", "/error").permitAll()
                         .anyRequest().authenticated()
                 )
